@@ -1,21 +1,31 @@
 Vagrant.configure("2") do |config|
 
-  # Every Vagrant development environment requires a box. You can search for
-  # boxes at https://vagrantcloud.com/search.
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.define "clusterController" do |controller|
+    controller.vm.hostname = "cluster.controller"
+    controller.vm.box = "ubuntu/trusty64"
+    controller.vm.disk :disk, size: "75GB", primary: true
+    controller.vm.network "private_network", ip: "192.168.0.100"
+    controller.vm.provider "virtualbox" do |vb|
+      vb.memory = 2048
+      vb.cpus = 2
+    end
 
-  # config.vm.network "forwarded_port", guest: 80, host: 8080
-  # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
-  # config.vm.network "private_network", ip: "192.168.33.10"
-  # config.vm.network "public_network"
-
-  # config.vm.synced_folder "../data", "/vagrant_data"
-
-  config.vm.provider "virtualbox" do |vb|
-    vb.memory = "2048"
+    controller.vm.provision "shell", path: ""
   end
 
-  # config.vm.provision "shell", inline: <<-SHELL
+  N = 3
 
-  # SHELL
+  (0..N).each do |i|
+    config.vm.define "clusterNode#{i}" do |node|
+      node.vm.hostname = "cluster.node.#{i}"
+      node.vm.box = "ubuntu/trusty64"
+      node.vm.disk :disk, size: "75GB", primary: true
+      node.vm.disk :disk, size: "75GB", name: "kubevol"
+      node.vm.network "private_network", ip: "192.168.0.#{10+i}"
+      node.vm.provider "virtualbox" do |vb|
+        vb.memory = 2048
+        vb.cpus = 
+      end
+    end
+  end
 end
