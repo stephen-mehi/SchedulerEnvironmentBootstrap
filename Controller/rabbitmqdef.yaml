@@ -1,0 +1,18 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmqdef
+spec:
+  service:
+    type: NodePort
+  persistence:
+    storageClassName: fast-disks
+    storage: 20Gi
+  replicas: 1 
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 4Gi
+    limits:
+      cpu: 1000m
+      memory: 4Gi  
