@@ -2,26 +2,38 @@
 apt-get update
 
 #MAKE VOLUME MOUNT DIRECTORY
+mkdir /mnt/fast-disks
 mkdir /mnt/fast-disks/vol1
+mkdir /mnt/fast-disks/vol2
 
-#MOUNT EXT4 FORMATTED DISK AT SPECIFIED DIR
-#USED BY KUBERNETES LOCAL PERSISTEN VOLS
-mount -t ext4 /kubevol /mnt/fast-disks/vol1
+chmod 0700 /home/vagrant
 
-#ENABLE KEY SYS MODULES 
-for module in br_netfilter ip6_udp_tunnel ip_set ip_set_hash_ip ip_set_hash_net iptable_filter iptable_nat iptable_mangle iptable_raw nf_conntrack_netlink nf_conntrack nf_conntrack_ipv4   nf_defrag_ipv4 nf_nat nf_nat_ipv4 nf_nat_masquerade_ipv4 nfnetlink udp_tunnel veth vxlan x_tables xt_addrtype xt_conntrack xt_comment xt_mark xt_multiport xt_nat xt_recent xt_set  xt_statistic xt_tcpudp;
-  do
-    if ! lsmod | grep -q $module; then
-      modprobe $module
-    fi;
-done
+echo "Creating file system from block device sdb"
+mkfs.ext4 /dev/sdb
+echo "File system creation complete for sdb"
+
+echo "About to mount volume sdb"
+mount -t ext4 /dev/sdb /mnt/fast-disks/vol1
+echo "sdb volume mounted"
+
+echo "Creating file system from block device sdc"
+mkfs.ext4 /dev/sdc
+echo "File system creation complete for sdc"
+
+echo "About to mount volume sdc"
+mount -t ext4 /dev/sdc /mnt/fast-disks/vol2
+echo "sdc volume mounted"
+
+#this is required for mount to stick around
+echo "/dev/sdb /mnt/fast-disks/vol1                       ext4    defaults        1 1" >> /etc/fstab
+echo "/dev/sdc /mnt/fast-disks/vol2                       ext4    defaults        1 1" >> /etc/fstab
 
 #DISABLE SWAP DISK
 #THIS PREVENTS OS FROM DUMPING MEMORY OVERFLOW INTO HARD DISK
 swapoff -a
 
 #COMMENT OUT SWAP RECORD
-sed -i 's/^([^#].*?\sswap\s+.*)$/#\1/g' /etc/fstab
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
 #ADD NETWORK CONFIG FOR K8S
 tee -a /etc/sysctl.d/99-kubernetes.conf <<EOF
@@ -36,10 +48,11 @@ free -h
 
 #PULL AND INSTALL DOCKER AND ADD CURRENT USER TO DOCKER GROUP
 curl https://releases.rancher.com/install-docker/19.03.sh | bash -
+
 systemctl enable --now docker
 docker version --format '{{.Server.Version}}'
-usermod -aG docker $USER
-id $USER
+usermod -aG docker vagrant
+id vagrant
 
 #INSTALL MODULE USED FOR CONFIGURING PORTS
 apt-get install firewalld -y
@@ -58,4 +71,3 @@ done
 sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
 sed -i 's/#AllowTcpForwarding/AllowTcpForwarding/g' /etc/ssh/sshd_config
 
-systemctl restart ssh

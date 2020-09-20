@@ -1,0 +1,1 @@
+kubectl delete deployment perf-test --namespace rabbitmq
