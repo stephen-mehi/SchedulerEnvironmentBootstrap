@@ -328,7 +328,7 @@ kubectl apply -f rabbitmqdef.yaml --namespace rabbitmq
 kubectl create namespace cockroachdb
 kubectl config set-context $(kubectl config current-context) --namespace=cockroachdb
 
-
+#COCKROACH V19.2.5****
 tee cockroachdb-statefulset.yaml <<EOF
 apiVersion: v1
 kind: Service
@@ -516,6 +516,132 @@ kubectl create -f cockroachdb-statefulset.yaml
 kubectl create -f cluster-init.yaml
 
 kubectl config set-context $(kubectl config current-context) --namespace=default
+
+git clone https://github.com/prometheus-operator/kube-prometheus.git
+cd kube-prometheus
+git checkout v0.6.0
+kubectl create -f manifests/setup
+until kubectl get servicemonitors --all-namespaces ; do date; sleep 1; echo ""; done
+kubectl create -f manifests/
+
+#ESTABLISH ELEVATED PROMETHEUS PERMISSIONS 
+tee prometheus-permissions.yaml <<EOF
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus-k8s
+  namespace: monitoring
+EOF
+
+kubectl apply -f prometheus-permissions.yaml -n monitoring
+
+
+#CONFIGURE POD MONITORING FOR PROMETHEUS TO START SCRAPING RMQ METRICS
+tee rmq-pod-monitor.yaml <<EOF
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: rabbitmq
+spec:
+  podMetricsEndpoints:
+  - interval: 15s
+    port: prometheus
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: rabbitmq
+  namespaceSelector:
+    any: true
+EOF
+
+kubectl apply -f rmq-pod-monitor.yaml -n monitoring
+
+kubectl label svc cockroachdb prometheus=cockroachdb -n cockroachdb
+
+tee cockroachdb-service-monitor.yaml <<EOF
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cockroachdb
+  labels:
+    app: cockroachdb
+    prometheus: cockroachdb
+spec:
+  selector:
+    matchLabels:
+      prometheus: cockroachdb
+  endpoints:
+  - port: http
+    path: /_status/vars
+  namespaceSelector:
+    any: true
+EOF
+
+kubectl apply -f cockroachdb-service-monitor.yaml -n monitoring
+
+#EXPOSE PROMETHEUS THROUGH INGRESS
+tee monitoring-ingress.yaml <<EOF
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  namespace: monitoring
+  name: monitoring-ingress
+spec:
+  rules:
+  - host: scheduler.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: prometheus-k8s
+          servicePort: 9090
+EOF
+
+kubectl apply -f monitoring-ingress.yaml -n monitoring
+
+apt-get install jq
+
+grafana_host="http://scheduler.com"
+grafana_cred="admin:admin"
+grafana_datasource="prometheus"
+ds=(11465);
+for d in "${ds[@]}"; do
+  echo -n "Processing $d: "
+  j=$(curl -k -u "$grafana_cred" $grafana_host/api/gnet/dashboards/$d | jq .json)
+  curl -s -k -u "$grafana_cred" -XPOST -H "Accept: application/json" \
+    -H "Content-Type: application/json" \
+    -d "{\"dashboard\":$j,\"overwrite\":true, \
+        \"inputs\":[{\"name\":\"prometheus\",\"type\":\"datasource\", \
+        \"pluginId\":\"prometheus\",\"value\":\"$grafana_datasource\"}]}" \
+    $grafana_host/api/dashboards/import; echo ""
+done
 
 
 #UPDATE SSH SETTINGS TO ALLOW TCP FORWARDING
