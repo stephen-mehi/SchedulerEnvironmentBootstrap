@@ -311,15 +311,15 @@ metadata:
 spec:
   persistence:
     storageClassName: fast-disks
-    storage: 40Gi
+    storage: 18Gi
   replicas: 1 
   resources:
     requests:
-      cpu: 1000m
-      memory: 2Gi
+      cpu: 500m
+      memory: 512Mi
     limits:
-      cpu: 1000m
-      memory: 2Gi  
+      cpu: 500m
+      memory: 512Mi  
 EOF
 
 #APPLY RABBITMQ CLUSTER YAML
@@ -436,8 +436,8 @@ spec:
         #   kubectl describe nodes
         resources:
           requests:
-            cpu: "2"
-            memory: "2Gi"
+            cpu: 500m
+            memory: 512Mi
         ports:
         - containerPort: 26257
           name: grpc
@@ -487,7 +487,7 @@ spec:
         - "ReadWriteOnce"
       resources:
         requests:
-          storage: 40Gi
+          storage: 18Gi
 EOF
 
 tee cluster-init.yaml <<EOF
