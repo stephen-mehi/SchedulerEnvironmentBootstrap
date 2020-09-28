@@ -152,20 +152,20 @@ kubectl apply -f ingress.yaml -n monitoring
 
 apt-get install jq
 
-grafana_host="http://scheduler.com"
-grafana_cred="admin:admin"
-grafana_datasource="prometheus"
-ds=(11465);
-for d in "${ds[@]}"; do
-  echo -n "Processing $d: "
-  j=$(curl -k -u "$grafana_cred" $grafana_host/api/gnet/dashboards/$d | jq .json)
-  curl -s -k -u "$grafana_cred" -XPOST -H "Accept: application/json" \
-    -H "Content-Type: application/json" \
-    -d "{\"dashboard\":$j,\"overwrite\":true, \
-        \"inputs\":[{\"name\":\"prometheus\",\"type\":\"datasource\", \
-        \"pluginId\":\"prometheus\",\"value\":\"$grafana_datasource\"}]}" \
-    $grafana_host/api/dashboards/import; echo ""
-done
+#grafana_host="http://scheduler.com"
+#grafana_cred="admin:admin"
+#grafana_datasource="prometheus"
+#ds=(11465);
+#for d in "${ds[@]}"; do
+#  echo -n "Processing $d: "
+#  j=$(curl -k -u "$grafana_cred" $grafana_host/api/gnet/dashboards/$d | jq .json)
+#  curl -s -k -u "$grafana_cred" -XPOST -H "Accept: application/json" \
+#    -H "Content-Type: application/json" \
+#    -d "{\"dashboard\":$j,\"overwrite\":true, \
+#        \"inputs\":[{\"name\":\"prometheus\",\"type\":\"datasource\", \
+#        \"pluginId\":\"prometheus\",\"value\":\"$grafana_datasource\"}]}" \
+#    $grafana_host/api/dashboards/import; echo ""
+#done
 
 
 #UPDATE SSH SETTINGS TO ALLOW TCP FORWARDING
