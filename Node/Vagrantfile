@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
     node.vm.network :public_network, bridge: "Hyper-V Virtual Ethernet Adapter #2", ip: "192.168.0.11"
     node.vm.provider "virtualbox" do |vb|
       vb.memory = 4096
-      vb.cpus = 2
+      vb.cpus = 3
     end
 	
     node.vm.provision :shell, path: "bootstrap-node.sh", reboot: true
