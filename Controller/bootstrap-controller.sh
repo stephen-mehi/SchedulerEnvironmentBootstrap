@@ -106,7 +106,7 @@ kubectl create -f /root/sig-storage-local-static-provisioner/provisioner_generat
 
 cd
 
-internalVersion = "v0.0.2"
+internalVersion = "v0.0.3"
 curl -fsSL -o local-storage-class.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/${internalVersion}/Manifests/local-storage-class.yaml
 
 kubectl create namespace rabbitmq
