@@ -60,8 +60,9 @@ chmod 700 get_helm.sh
 ./get_helm.sh
 helm version
 
+internalVersion = "v0.0.2"
 #GET RKE MANIFEST
-curl -fsSL -o cluster.yml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/v0.0.1/Manifests/cluster.yml
+curl -fsSL -o cluster.yml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/${internalVersion}/Manifests/cluster.yml
 rke up
 
 #SET KUBCTL CONFIG ENV VAR
@@ -105,12 +106,12 @@ kubectl create -f /root/sig-storage-local-static-provisioner/provisioner_generat
 
 cd
 
-curl -fsSL -o local-storage-class.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/v0.0.1/Manifests/local-storage-class.yaml
+curl -fsSL -o local-storage-class.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/${internalVersion}/Manifests/local-storage-class.yaml
 
 kubectl create namespace rabbitmq
 kubectl apply -f local-storage-class.yaml --namespace rabbitmq
 
-curl -fsSL -o rabbitmq-cluster.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/v0.0.1/Manifests/rabbitmq-cluster.yaml
+curl -fsSL -o rabbitmq-cluster.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/${internalVersion}/Manifests/rabbitmq-cluster.yaml
 
 #APPLY RABBITMQ CLUSTER YAML
 kubectl apply -f rabbitmq-cluster.yaml --namespace rabbitmq
@@ -118,11 +119,11 @@ kubectl apply -f rabbitmq-cluster.yaml --namespace rabbitmq
 kubectl create namespace cockroachdb
 kubectl config set-context $(kubectl config current-context) --namespace=cockroachdb
 
-curl -fsSL -o cockroachdb-cluster.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/v0.0.1/Manifests/cockroachdb-cluster.yaml
+curl -fsSL -o cockroachdb-cluster.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/${internalVersion}/Manifests/cockroachdb-cluster.yaml
 
 kubectl create -f cockroachdb-cluster.yaml
 
-curl -fsSL -o cockroachdb-cluster-init.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/v0.0.1/Manifests/cockroachdb-cluster-init.yaml
+curl -fsSL -o cockroachdb-cluster-init.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/${internalVersion}/Manifests/cockroachdb-cluster-init.yaml
 
 kubectl create -f cockroachdb-cluster-init.yaml
 
@@ -135,18 +136,18 @@ kubectl create -f manifests/setup
 until kubectl get servicemonitors --all-namespaces ; do date; sleep 1; echo ""; done
 kubectl create -f manifests/
 
-curl -fsSL -o prometheus-role.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/v0.0.1/Manifests/prometheus-role.yaml
+curl -fsSL -o prometheus-role.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/${internalVersion}/Manifests/prometheus-role.yaml
 
 #ESTABLISH ELEVATED PROMETHEUS PERMISSIONS 
 kubectl apply -f prometheus-role.yaml -n monitoring
 
 #CONFIGURE POD MONITORING FOR PROMETHEUS TO START SCRAPING RMQ METRICs
-curl -fsSL -o prometheus-monitors.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/v0.0.1/Manifests/prometheus-monitors.yaml
+curl -fsSL -o prometheus-monitors.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/${internalVersion}/Manifests/prometheus-monitors.yaml
 
 kubectl apply -f prometheus-monitors.yaml -n monitoring
 
 #EXPOSE PROMETHEUS THROUGH INGRESS
-curl -fsSL -o ingress.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/v0.0.1/Manifests/ingress.yaml
+curl -fsSL -o ingress.yaml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/${internalVersion}/Manifests/ingress.yaml
 
 kubectl apply -f ingress.yaml -n monitoring
 
