@@ -1,0 +1,16 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmqdef
+spec:
+  persistence:
+    storageClassName: fast-disks
+    storage: 18Gi
+  replicas: 1 
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi 
