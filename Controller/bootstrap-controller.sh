@@ -60,7 +60,7 @@ chmod 700 get_helm.sh
 ./get_helm.sh
 helm version
 
-internalVersion = "v0.0.2"
+internalVersion="v0.0.2"
 #GET RKE MANIFEST
 curl -fsSL -o cluster.yml https://raw.githubusercontent.com/stephen-mehi/SchedulerEnvironmentBootstrap/${internalVersion}/Manifests/cluster.yml
 rke up
