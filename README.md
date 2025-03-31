@@ -1,6 +1,6 @@
 # SchedulerEnvironmentBootstrap
 
-Helper for setting up scheduler environment.
+Helper for setting up environment. This system uses vagrant to automate provisioning multiple local VMs. This cluster is responsible for interacting with networked hardware in a fault tolerant manner. Kubernetes is used as the orchestrator and various pieces of infrastructure inclusing messaging(RabbitMQ), observability(Prometheus), and distrubuted persistence(CockroachDB) are provisioned on that cluster.
 
 ## Installation
 
